@@ -16,7 +16,7 @@ function ready() {
             <div>
             <h1>${product.title}</h1>
             <img src="${product.imageUrl}"></img>
-            <button>Add to cart</button>
+            <button onclick="getUser(${product.id})">Add to cart</button>
 
             </div>
         `
@@ -25,6 +25,37 @@ function ready() {
     }
     })
 }
+
+function getUser(productId){
+    axios.post('http://localhost:3000/cart', {productId: productId}).then(response =>{
+         if(response.request.status === 200){
+                console.log(response.data.message)
+                notifyUsers(response.data.message)
+         }
+         else 
+         {
+            throw new Error();
+         }
+
+    }
+       
+    ).catch(err =>{console.log(err)})
+}
+
+function notifyUsers(message){
+    const container = document.getElementById('container');
+    const notification = document.createElement('div');
+   // notification.style.backgroundColor = iserror ? 'red' : 'green';
+    notification.style.backgroundColor = 'green';
+
+    notification.classList.add('notification');
+    notification.innerHTML = `<h4>${message}<h4>`;
+    container.appendChild(notification);
+    setTimeout(()=>{
+        notification.remove();
+    },2500)
+}
+
 
 /*
 if (document.readyState == 'loading') {
