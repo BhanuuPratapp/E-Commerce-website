@@ -5,9 +5,45 @@ if (document.readyState == 'loading') {
 }
 
 function ready() {
+    axios.get('http://localhost:3000/products').then((data) =>{
+        console.log(data);
+        if(data.request.status === 200){
+      const products = data.data.products;
+      const parentSection = document.getElementsByClassName('content-section');
+      console.log(parentSection[0])
+      products.forEach(product =>{
+        const productHTML = `
+            <div>
+            <h1>${product.title}</h1>
+            <img src="${product.imageUrl}"></img>
+            <button>Add to cart</button>
+
+            </div>
+        `
+        parentSection[0].innerHTML += productHTML;
+      })
+    }
+    })
+}
+
+/*
+if (document.readyState == 'loading') {
+    document.addEventListener('DOMContentLoaded', ready)
+} else {
+    ready()
+}
+
+function ready() {
+    axios.get('http://localhost:3000/products').then((data) =>{
+        console.log(data);
+
+       
+    })
     var removeCartItemButtons = document.getElementsByClassName('btn-danger')
+    
     for (var i = 0; i < removeCartItemButtons.length; i++) {
         var button = removeCartItemButtons[i]
+        
         button.addEventListener('click', removeCartItem)
     }
 
@@ -28,6 +64,7 @@ function ready() {
 
 function purchaseClicked() {
     alert('Thank you for your purchase')
+  
     var cartItems = document.getElementsByClassName('cart-items')[0]
     while (cartItems.hasChildNodes()) {
         cartItems.removeChild(cartItems.firstChild)
@@ -37,6 +74,7 @@ function purchaseClicked() {
 
 function removeCartItem(event) {
     var buttonClicked = event.target
+  
     buttonClicked.parentElement.parentElement.remove()
     updateCartTotal()
 }
@@ -101,3 +139,5 @@ function updateCartTotal() {
     total = Math.round(total * 100) / 100
     document.getElementsByClassName('cart-total-price')[0].innerText = '$' + total
 }
+
+*/
