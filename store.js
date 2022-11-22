@@ -29,19 +29,49 @@ function ready() {
 function getUser(productId){
     axios.post('http://localhost:3000/cart', {productId: productId}).then(response =>{
          if(response.request.status === 200){
-                console.log(response.data.message)
+            //    console.log(response.data.message)
+              //  console.log(response.data.imageUrl)
+                console.log(response.data.title)
+                showCartItems();
                 notifyUsers(response.data.message)
          }
          else 
          {
-            throw new Error();
+            throw new Error(response.data.message);
          }
-
-    }
-       
-    ).catch(err =>{console.log(err)})
+    }  
+    ).catch((errMess) =>{
+        notifyUsers(errMess);
+        
+    })
 }
 
+function showCartItems(){
+    axios.get('http://localhost:3000/cart').then(products =>{
+
+      console.log(products.data.products);
+      var cartRow = document.createElement('div');
+      cartRow.classList.add('cart-row');
+      var cartItems = document.getElementsByClassName('cart-items')[0];
+      for(i=0;i<products.data.products.length;i++){
+        console.log(products.data.products[i].title)
+        var cartRowContents = `
+        <div class="cart-item cart-column">
+            <img class="cart-item-image" src="${products.data.products[i].imageUrl}" width="100" height="100">
+            <span class="cart-item-title">${products.data.products[i].title}</span>
+        </div>
+        <span class="cart-price cart-column">${products.data.products[i].price}</span>
+        <div class="cart-quantity cart-column">
+            <input class="cart-quantity-input" type="number" value="1">
+            <button class="btn btn-danger" type="button">REMOVE</button>
+        </div>`
+    cartRow.innerHTML = cartRowContents;
+    cartItems.append(cartRow);
+      }
+     
+      
+    })
+}
 function notifyUsers(message){
     const container = document.getElementById('container');
     const notification = document.createElement('div');
@@ -56,8 +86,8 @@ function notifyUsers(message){
     },2500)
 }
 
-
 /*
+
 if (document.readyState == 'loading') {
     document.addEventListener('DOMContentLoaded', ready)
 } else {
