@@ -1,38 +1,149 @@
 if (document.readyState == 'loading') {
     document.addEventListener('DOMContentLoaded', ready)
+  //  document.addEventListener('DOMContentLoaded', showCartItems)
+    
 } else {
     ready()
+    //showCartItems()
 }
 
-function ready() {
-    axios.get('http://localhost:3000/products').then((data) =>{
-        console.log(data);
-        if(data.request.status === 200){
-      const products = data.data.products;
-      const parentSection = document.getElementsByClassName('content-section');
-      console.log(parentSection[0])
+   function ready() {
+    const page =1;
+    axios.get(`http://localhost:3000/products?page=${page}`).then(response =>{
+
+          listProducts(response.data.products);    
+          showPagination(response.data);
+          showCartItems();
+    }).catch(err => console.log(err));
+
+    document.getElementsByClassName('btn-purchase')[0].addEventListener('click', purchaseClicked)
+    
+   // document.getElementsByClassName('btn-danger').addEventListener('click', removeCartItems)
+    
+
+}
+ 
+
+//var removeCartItemButtons = document.getElementsByClassName('btn-danger')
+
+   window.addEventListener('click', () =>{
+    var removeCartItemButtons = document.getElementsByClassName('btn-danger')
+    for (var i = 0; i < removeCartItemButtons.length; i++) {
+        var button = removeCartItemButtons[i]
+        console.log(button)
+    
+       button.addEventListener('click', removeCartItem)
+     
+    }
+
+   }) 
+  
+
+
+function removeCartItem(productId) {
+  
+var innerhtml  = document.getElementById("main-div");
+innerhtml.parentNode.remove();
+
+  axios.post('http://localhost:3000/admin/delete-product', {productId: productId}).then(response =>{
+  console.log("Deleted cart product -------------> SUCCESSFULL")
+ // console.log(response)
+  }).catch(err => console.log(err));
+}
+
+
+var products = document.getElementsByClassName('btn-danger')
+console.log("products-------------",products)
+
+function purchaseClicked() {
+    alert('Thank you for your purchase')
+  
+    var cartItems = document.getElementsByClassName('cart-items')[0]
+    while (cartItems.hasChildNodes()) {
+        cartItems.removeChild(cartItems.firstChild)
+    }
+   
+}
+
+
+
+
+function showPagination({
+    currentPage,
+    nextPage,
+    hasNextPage,
+    previousPage,
+    hasPreviousPage,
+    lastPage,
+
+}){
+
+    pagination.innerHTML ='';
+
+    if(hasPreviousPage){
+        const btn1 =  document.createElement("button");
+        btn1.innerHTML = previousPage;
+        btn1.addEventListener('click', () =>getProducts(previousPage));
+        pagination.appendChild(btn1);
+    }
+
+    const btn2 =  document.createElement("button");
+        btn2.innerHTML = `<h1>${currentPage}</h1>`;
+      
+        btn2.addEventListener('click', () =>getProducts(currentPage));
+        pagination.appendChild(btn2);
+
+     if(hasNextPage){
+        const btn3 =  document.createElement("button");
+        btn3.innerHTML = nextPage;
+        btn3.addEventListener('click', () =>getProducts(nextPage));
+        pagination.appendChild(btn3);
+     }   
+
+}
+
+function getProducts(page){
+    axios.get(`http://localhost:3000/products?page=${page}`).then(response =>{
+
+          listProducts(response.data.products);    
+          showPagination(response.data);
+        
+    }).catch(err => console.log(err))
+}
+
+function listProducts(products){
+    
+    const parentSection = document.getElementsByClassName('content-section');
+    if(parentSection[0].innerHTML !== ''){
+       //console.log(parentSection[0])
+       parentSection[0].innerHTML = ''; 
+    }
+    //  console.log(parentSection[0])
       products.forEach(product =>{
         const productHTML = `
             <div>
             <h1>${product.title}</h1>
             <img src="${product.imageUrl}"></img>
             <button onclick="getUser(${product.id})">Add to cart</button>
-
+             
             </div>
         `
+      
         parentSection[0].innerHTML += productHTML;
       })
-    }
-    })
+    
 }
 
 function getUser(productId){
+    
+
+    
     axios.post('http://localhost:3000/cart', {productId: productId}).then(response =>{
          if(response.request.status === 200){
-            //    console.log(response.data.message)
-              //  console.log(response.data.imageUrl)
-                console.log(response.data.title)
-                showCartItems();
+              
+               // console.log("response----------->",response);
+              
+                showCartItems(productId);
                 notifyUsers(response.data.message)
          }
          else 
@@ -46,32 +157,50 @@ function getUser(productId){
     })
 }
 
-function showCartItems(){
-    axios.get('http://localhost:3000/cart').then(products =>{
 
-      console.log(products.data.products);
-      var cartRow = document.createElement('div');
-      cartRow.classList.add('cart-row');
-      var cartItems = document.getElementsByClassName('cart-items')[0];
-      for(i=0;i<products.data.products.length;i++){
-        console.log(products.data.products[i].title)
-        var cartRowContents = `
-        <div class="cart-item cart-column">
-            <img class="cart-item-image" src="${products.data.products[i].imageUrl}" width="100" height="100">
-            <span class="cart-item-title">${products.data.products[i].title}</span>
-        </div>
-        <span class="cart-price cart-column">${products.data.products[i].price}</span>
-        <div class="cart-quantity cart-column">
-            <input class="cart-quantity-input" type="number" value="1">
-            <button class="btn btn-danger" type="button">REMOVE</button>
-        </div>`
-    cartRow.innerHTML = cartRowContents;
-    cartItems.append(cartRow);
-      }
-     
+function showCartItems(prodId){
+    var cartItems = document.getElementsByClassName('cart-items')[0]
+    if(cartItems.innerHTML !== ''){
+        cartItems.innerHTML = ''
+    }
+    axios.get('http://localhost:3000/cart').then(products =>{
+        
+  
+    if(products.status === 200){
+
+        products.data.products.forEach(product => {
+            var cartItems = document.getElementsByClassName('cart-items')[0];
+            var cartRow = document.createElement('div');
+            cartRow.classList.add('cart-row');
+            var cartRowContents =  `
+            <div id="main-div" class="cart-item cart-column">
+                <img class="cart-item-image" src="${product.imageUrl}" width="100" height="100">
+                <span class="cart-item-title">${product.cartItems.quantity}</span>
+
+            </div>
+            <span class="cart-price cart-column">${product.price}</span>
+            <div id="main-div" class="cart-quantity cart-column">
+                <input class="cart-quantity-input" type="number" value="1">
+                <button class="btn btn-danger" type="button" onclick="removeCartItem(${product.id})">REMOVE</button>
+            </div>`
+           
+        
+ 
+            var removeInnerHTML = document.getElementsByClassName('cart-items')[0]
+            console.log("elelelellelelel=======", removeInnerHTML.di)
+
+            cartRow.innerHTML += cartRowContents;
+            cartItems.append(cartRow);
+        })
       
-    })
+
+    }
+
+
+}).catch(err => console.log(err))
 }
+
+ 
 function notifyUsers(message){
     const container = document.getElementById('container');
     const notification = document.createElement('div');
