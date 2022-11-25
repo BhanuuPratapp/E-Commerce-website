@@ -16,7 +16,7 @@ if (document.readyState == 'loading') {
           showCartItems();
     }).catch(err => console.log(err));
 
-    document.getElementsByClassName('btn-purchase')[0].addEventListener('click', purchaseClicked)
+    //document.getElementsByClassName('btn-purchase')[0].addEventListener('click', purchaseClicked)
     
    // document.getElementsByClassName('btn-danger').addEventListener('click', removeCartItems)
     
@@ -45,10 +45,11 @@ function removeCartItem(productId) {
 var innerhtml  = document.getElementById("main-div");
 innerhtml.parentNode.remove();
 
-  axios.post('http://localhost:3000/admin/delete-product', {productId: productId}).then(response =>{
+  axios.post('http://localhost:3000/cart-delete-item', {productId: productId}).then(response =>{
   console.log("Deleted cart product -------------> SUCCESSFULL")
  // console.log(response)
   }).catch(err => console.log(err));
+  updateCartTotal();
 }
 
 
@@ -59,10 +60,11 @@ function purchaseClicked() {
     alert('Thank you for your purchase')
   
     var cartItems = document.getElementsByClassName('cart-items')[0]
+
     while (cartItems.hasChildNodes()) {
         cartItems.removeChild(cartItems.firstChild)
     }
-   
+    updateCartTotal();
 }
 
 
@@ -163,43 +165,94 @@ function showCartItems(prodId){
     if(cartItems.innerHTML !== ''){
         cartItems.innerHTML = ''
     }
+
+    var cartOrders = document.getElementsByClassName('cart-orders-button')[0];
+    if(cartOrders.innerHTML !== ''){
+        cartOrders.innerHTML = ''
+    }
+   
     axios.get('http://localhost:3000/cart').then(products =>{
-        
+        //console.log("products    ",products.data.products[0].title); 
   
     if(products.status === 200){
+     //   console.log("products    ",products.cartItems.quantity);
+       var cartOrders = document.getElementsByClassName('cart-orders-button')[0];
+       var cartRows = document.createElement('div');
+       cartRows.classList.add('cart-row');
+       
+    
 
         products.data.products.forEach(product => {
+            var HTMLcontents = `<button class="btn btn-primary btn-purchase" type="button" onclick="orderNow('${decodeURIComponent(product.imageUrl)}','${encodeURIComponent(product.price)}','${decodeURIComponent(product.description)}','${encodeURIComponent(product.cartItems.quantity)}','${decodeURIComponent(product.title)}')">PURCHASE</button>`
+          //  console.log("products    ",product.cartItems.quantity);
+
             var cartItems = document.getElementsByClassName('cart-items')[0];
+          
             var cartRow = document.createElement('div');
             cartRow.classList.add('cart-row');
             var cartRowContents =  `
             <div id="main-div" class="cart-item cart-column">
                 <img class="cart-item-image" src="${product.imageUrl}" width="100" height="100">
-                <span class="cart-item-title">${product.cartItems.quantity}</span>
+                <span class="cart-item-title">${product.title}</span>
 
             </div>
             <span class="cart-price cart-column">${product.price}</span>
             <div id="main-div" class="cart-quantity cart-column">
-                <input class="cart-quantity-input" type="number" value="1">
+                <input class="cart-quantity-input" type="number" value=${product.cartItems.quantity}>
                 <button class="btn btn-danger" type="button" onclick="removeCartItem(${product.id})">REMOVE</button>
             </div>`
-           
-        
- 
-            var removeInnerHTML = document.getElementsByClassName('cart-items')[0]
-            console.log("elelelellelelel=======", removeInnerHTML.di)
+         
+    
+          //  var removeInnerHTML = document.getElementsByClassName('cart-items')[0]
+        //    console.log("elelelellelelel=======", removeInnerHTML.di)
 
             cartRow.innerHTML += cartRowContents;
             cartItems.append(cartRow);
+            cartRows.innerHTML = HTMLcontents;
         })
+       
       
-
+        cartOrders.append(cartRows)
     }
+}).catch(err => console.log(err))
+updateCartTotal();
+}
+
+
+
+function orderNow( ){
+    axios.post('http://localhost:3000/create-orders').then(response =>{
+    console.log(response);
 
 
 }).catch(err => console.log(err))
+
+    
 }
 
+
+function updateCartTotal() {
+
+
+    var total = 0;
+    axios.get('http://localhost:3000/cart').then(product =>{
+       
+        product.data.products.forEach(product => {
+     
+        var price = product.price;
+        console.log(price);
+        var quantity =product.cartItems.quantity;
+        console.log(quantity);
+     
+        total = total + (price * quantity)
+        console.log(total)
+    })
+    total = Math.round(total * 100) / 100
+    console.log(total)
+    document.getElementsByClassName('cart-total-price')[0].innerText = '$' + total
+})
+    
+}
  
 function notifyUsers(message){
     const container = document.getElementById('container');
