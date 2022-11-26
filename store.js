@@ -16,9 +16,7 @@ if (document.readyState == 'loading') {
           showCartItems();
     }).catch(err => console.log(err));
 
-    //document.getElementsByClassName('btn-purchase')[0].addEventListener('click', purchaseClicked)
-    
-   // document.getElementsByClassName('btn-danger').addEventListener('click', removeCartItems)
+  
     
 
 }
@@ -41,20 +39,34 @@ if (document.readyState == 'loading') {
 
 
 function removeCartItem(productId) {
+/*
+axios.get('http://localhost:3000/cart').then((cartProducts)=> {
   
-var innerhtml  = document.getElementById("cart-items-id");
-console.log("innerhtml------------->",innerhtml.parentElement.parentElement)
-
-
-
-
-  axios.post('http://localhost:3000/cart-delete-item', {productId: productId}).then(response =>{
-  console.log("Deleted cart product -------------> SUCCESSFULL")
+  cartProducts.data.products.filter((item) => item.id !== productId);
+  showCartItems();
   updateCartTotal();
-  }).catch(err => console.log(err));
- 
+}).catch(err => console.log(err))
+*/
+axios.post('http://localhost:3000/cart-delete-item', {productId: productId}).then(response =>{
+    console.log("Deleted cart product -------------> SUCCESSFULL")
+   
+    showCartItems();
+    updateCartTotal();
+
+    }).catch(err => console.log(err));
+
+
 }
 
+/*
+function deleteSelectedCartItemFromBackend(productId){
+
+    axios.post('http://localhost:3000/cart-delete-item', {productId: productId}).then(response =>{
+        console.log("Deleted cart product -------------> SUCCESSFULL")
+        updateCartTotal();
+        }).catch(err => console.log(err));
+}
+*/
 
 var products = document.getElementsByClassName('btn-danger')
 console.log("products-------------",products)
@@ -162,7 +174,7 @@ function getUser(productId){
 }
 
 
-function showCartItems(prodId){
+function showCartItems(){
     var cartItems = document.getElementsByClassName('cart-items')[0]
     if(cartItems.innerHTML !== ''){
         cartItems.innerHTML = ''
@@ -204,11 +216,7 @@ function showCartItems(prodId){
                 <button class="btn btn-danger" type="button" onclick="removeCartItem(${product.id})">REMOVE</button>
             </div>`
          
-           // console.log(cart)
-    
-          //  var removeInnerHTML = document.getElementsByClassName('cart-items')[0]
-        //    console.log("elelelellelelel=======", removeInnerHTML.di)
-
+       
             cartRow.innerHTML += cartRowContents;
             cartItems.append(cartRow);
             cartRows.innerHTML = HTMLcontents;
@@ -231,11 +239,19 @@ function deletecartItems(){
 
 function getOrderDetails(){
     axios.get('http://localhost:3000/orders').then(response =>{
+      
+            response.data.ordersDetails.forEach(response =>{
+               response.products.forEach(response =>{
+                    console.log(response)
+                })
+            })
+    
+       
         let cartOrdersLength = response.data.ordersDetails.length ;
         
         for(var i=0; i<cartOrdersLength;i++){
         if(i ===  (cartOrdersLength-1)){
-            console.log("bhanu")
+           
             notifyUsers(`Order sucessfully placed with order id = ${response.data.ordersDetails[cartOrdersLength-1].id}`);
         }
          
@@ -268,22 +284,22 @@ function updateCartTotal() {
         product.data.products.forEach(product => {
      
         var price = product.price;
-        console.log(price);
+   
         var quantity =product.cartItems.quantity;
-        console.log(quantity);
+       
      
         total = total + (price * quantity)
-        console.log(total)
+      
     })
     total = Math.round(total * 100) / 100
-    console.log(total)
+   
     document.getElementsByClassName('cart-total-price')[0].innerText = '$' + total
 })
     
 }
  
 function notifyUsers(message){
-    console.log("bhanu")
+    
     const container = document.getElementById('container');
     const notification = document.createElement('div');
    // notification.style.backgroundColor = iserror ? 'red' : 'green';
