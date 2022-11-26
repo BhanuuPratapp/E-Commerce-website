@@ -8,8 +8,13 @@ if (document.readyState == 'loading') {
 }
 
 function ready(){
+
  axios.get('http://localhost:3000/orders').then(response =>{
-      
+
+      if(response.status === 200)
+
+      {
+        
     response.data.ordersDetails.forEach(orders =>{
        
        orders.products.forEach(response =>{
@@ -24,6 +29,9 @@ function ready(){
 
         })
     })
-
+      }
+      else{
+        throw new Error("message");
+      }
  }).catch(err => console.log(err))
 }
